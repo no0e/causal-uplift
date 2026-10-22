@@ -17,6 +17,7 @@ Everything is logged to MLflow (sqlite:///mlflow.db) and summarised in docs/resu
 and docs/uplift_curves.png.
 """
 import argparse
+import json
 import sys
 import time
 from pathlib import Path
@@ -65,7 +66,10 @@ def parse():
                         help="Simulated value of one extra visit.")
     parser.add_argument("--cost", type=float, default=0.002,
                         help="Simulated cost of treating one user.")
-    parser.add_argument("--dowhy-rows", type=int, default=200_000)
+    parser.add_argument("--dowhy-rows", type=int, default=1_000_000)
+    parser.add_argument("--only-dowhy", action="store_true",
+                        help="Recompute the DoWhy section of an existing "
+                             "results.json and leave the rest alone.")
     parser.add_argument("--batch", type=int, default=1_000_000)
     parser.add_argument("--threads", type=int, default=None)
     parser.add_argument("--no-score-all", action="store_true")
@@ -104,11 +108,32 @@ def figure(curves, path):
     plt.close(fig)
 
 
+def dowhy_section(args, con):
+    from causal_uplift.identification import identify_and_refute
+
+    frame = con.sql(f"""
+        SELECT {", ".join(FEATURES + [TREATMENT, args.outcome])}
+        FROM '{args.data}' WHERE split = 'train'
+        USING SAMPLE reservoir({args.dowhy_rows} ROWS) REPEATABLE (7)
+    """).pl()
+    section = identify_and_refute(frame, args.outcome)
+    print(f"DoWhy ATE {section['ate']:+.5f}, refutations "
+          + ", ".join(f"{k} {v['new_effect']:+.5f}"
+                      for k, v in section["refutations"].items()))
+    return section
+
+
 def main():
     args = parse()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     con = D.connect(args.threads)
+    if args.only_dowhy:
+        path = out / "results.json"
+        results = json.loads(path.read_text())
+        results["dowhy"] = dowhy_section(args, con)
+        path.write_text(json.dumps(results, indent=2))
+        return
     tracking.setup(args.mlflow)
     timings, results = {}, {"data": str(args.data), "outcome": args.outcome}
 
@@ -124,19 +149,9 @@ def main():
 
         # ---------------------------------------------- DoWhy, on a sample
         if args.dowhy_rows:
-            from causal_uplift.identification import identify_and_refute
-
             started = time.time()
-            frame = con.sql(f"""
-                SELECT {", ".join(FEATURES + [TREATMENT, args.outcome])}
-                FROM '{args.data}' WHERE split = 'train'
-                USING SAMPLE reservoir({args.dowhy_rows} ROWS) REPEATABLE (7)
-            """).pl()
-            results["dowhy"] = identify_and_refute(frame, args.outcome)
+            results["dowhy"] = dowhy_section(args, con)
             timings["dowhy_s"] = round(time.time() - started, 1)
-            print(f"DoWhy ATE {results['dowhy']['ate']:+.5f}, refutations "
-                  + ", ".join(f"{k} {v['new_effect']:+.5f}"
-                              for k, v in results["dowhy"]["refutations"].items()))
 
         # ------------------------------------------------------- samples
         started = time.time()

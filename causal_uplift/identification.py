@@ -17,7 +17,14 @@ from . import FEATURES, TREATMENT
 
 
 def identify_and_refute(frame, outcome="visit", simulations=20, seed=0):
-    """ATE by propensity-score weighting, and the three refutations."""
+    """ATE by regression adjustment, and the three refutations.
+
+    Regression adjustment rather than propensity weighting: on a randomised
+    trial both are unbiased, but weighting by a propensity *fitted* on twelve
+    features adds the variance of that fit for nothing, and on a rare outcome
+    it made the placebo drift. The difference in means, the simplest
+    estimator of all, is reported next to it by `data.summary`.
+    """
     import dowhy
     from dowhy import CausalModel
 
@@ -27,8 +34,7 @@ def identify_and_refute(frame, outcome="visit", simulations=20, seed=0):
                         common_causes=FEATURES)
     estimand = model.identify_effect(proceed_when_unidentifiable=True)
     estimate = model.estimate_effect(
-        estimand, method_name="backdoor.propensity_score_weighting",
-        method_params={"weighting_scheme": "ips_weight"})
+        estimand, method_name="backdoor.linear_regression")
 
     np.random.seed(seed)
     refuters = {
