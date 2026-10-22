@@ -29,35 +29,40 @@ def ranking(score, seed=0):
     return np.lexsort((noise, -np.asarray(score, dtype=np.float64)))
 
 
-def _cumulative(score, t, y):
-    order = ranking(score)
+def _cumulative(score, t, y, weights=None, order=None):
+    """Cumulative counts down the ranking; `weights` count each row that often."""
+    order = ranking(score) if order is None else order
     t, y = t[order].astype(np.float64), y[order].astype(np.float64)
-    n_t, n_c = np.cumsum(t), np.cumsum(1 - t)
-    y_t, y_c = np.cumsum(y * t), np.cumsum(y * (1 - t))
-    return n_t, n_c, y_t, y_c
+    w = np.ones(len(order)) if weights is None else weights[order].astype(np.float64)
+    return (np.cumsum(w), np.cumsum(w * t), np.cumsum(w * (1 - t)),
+            np.cumsum(w * y * t), np.cumsum(w * y * (1 - t)))
 
 
-def uplift_curve(score, t, y, points=100):
+def _cuts(n, points):
+    return np.unique(np.linspace(1, n, points).astype(int)) - 1
+
+
+def uplift_curve(score, t, y, points=100, weights=None, order=None):
     """(fractions, incremental outcomes) at `points` cut-offs of the ranking."""
-    n = len(score)
-    n_t, n_c, y_t, y_c = _cumulative(score, t, y)
-    cuts = np.unique(np.linspace(1, n, points).astype(int)) - 1
+    n_all, n_t, n_c, y_t, y_c = _cumulative(score, t, y, weights, order)
+    cuts = _cuts(len(score), points)
     with np.errstate(divide="ignore", invalid="ignore"):
         rate_t = np.where(n_t[cuts] > 0, y_t[cuts] / n_t[cuts], 0.0)
         rate_c = np.where(n_c[cuts] > 0, y_c[cuts] / n_c[cuts], 0.0)
-    gain = (rate_t - rate_c) * (cuts + 1)
-    return np.concatenate([[0.0], (cuts + 1) / n]), np.concatenate([[0.0], gain])
+    gain = (rate_t - rate_c) * n_all[cuts]
+    return (np.concatenate([[0.0], n_all[cuts] / n_all[-1]]),
+            np.concatenate([[0.0], gain]))
 
 
-def qini_curve(score, t, y, points=100):
+def qini_curve(score, t, y, points=100, weights=None, order=None):
     """(fractions, Qini) with the control count rescaled to the treated count."""
-    n = len(score)
-    n_t, n_c, y_t, y_c = _cumulative(score, t, y)
-    cuts = np.unique(np.linspace(1, n, points).astype(int)) - 1
+    n_all, n_t, n_c, y_t, y_c = _cumulative(score, t, y, weights, order)
+    cuts = _cuts(len(score), points)
     with np.errstate(divide="ignore", invalid="ignore"):
         qini = y_t[cuts] - np.where(n_c[cuts] > 0,
                                     y_c[cuts] * n_t[cuts] / n_c[cuts], 0.0)
-    return np.concatenate([[0.0], (cuts + 1) / n]), np.concatenate([[0.0], qini])
+    return (np.concatenate([[0.0], n_all[cuts] / n_all[-1]]),
+            np.concatenate([[0.0], qini]))
 
 
 def _area_over_random(fractions, curve):
@@ -65,16 +70,18 @@ def _area_over_random(fractions, curve):
     return float(np.trapezoid(curve - random_line, fractions))
 
 
-def auuc(score, t, y, points=100):
+def auuc(score, t, y, points=100, weights=None, order=None):
     """Area between the uplift curve and random targeting, per user."""
-    fractions, gain = uplift_curve(score, t, y, points)
-    return _area_over_random(fractions, gain) / len(score)
+    fractions, gain = uplift_curve(score, t, y, points, weights, order)
+    total = len(score) if weights is None else float(weights.sum())
+    return _area_over_random(fractions, gain) / total
 
 
-def qini_coefficient(score, t, y, points=100):
+def qini_coefficient(score, t, y, points=100, weights=None, order=None):
     """Area between the Qini curve and random, per treated user."""
-    fractions, qini = qini_curve(score, t, y, points)
-    return _area_over_random(fractions, qini) / max(int(t.sum()), 1)
+    fractions, qini = qini_curve(score, t, y, points, weights, order)
+    treated = t.sum() if weights is None else (weights * t).sum()
+    return _area_over_random(fractions, qini) / max(float(treated), 1.0)
 
 
 def uplift_at(score, t, y, fraction):
@@ -90,16 +97,24 @@ def uplift_at(score, t, y, fraction):
 def bootstrap(metric, score, t, y, n=200, seed=0, baseline=None):
     """95% interval of `metric`, or of its difference to `baseline` scores.
 
-    Paired: both rankings are evaluated on the same resample, which is what
+    A resample with replacement is the same as counting each row as many times
+    as it was drawn, so each resample is a vector of counts over the rows in
+    their original ranking: no copy, no re-sort, one pass of cumulative sums.
+    That is what makes 200 resamples of millions of rows take seconds rather
+    than an hour. Paired: both rankings see the same counts, which is what
     makes a difference between two models on one test set meaningful.
+    `metric` must accept `weights` and `order` (auuc, qini_coefficient).
     """
     rng = np.random.default_rng(seed)
+    order = ranking(score)
+    base_order = None if baseline is None else ranking(baseline)
     values = []
     for _ in range(n):
-        idx = rng.integers(0, len(score), len(score))
-        value = metric(score[idx], t[idx], y[idx])
+        weights = np.bincount(rng.integers(0, len(score), len(score)),
+                              minlength=len(score))
+        value = metric(score, t, y, weights=weights, order=order)
         if baseline is not None:
-            value -= metric(baseline[idx], t[idx], y[idx])
+            value -= metric(baseline, t, y, weights=weights, order=base_order)
         values.append(value)
     low, high = np.percentile(values, [2.5, 97.5])
     return float(low), float(high)
