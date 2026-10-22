@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+data/
+mlruns/
+mlartifacts/
+# docs/results.json, docs/uplift_curves.png are committed: the README quotes them.
+docs/best_params.json
+mlflow.db
