@@ -1,0 +1,417 @@
+{
+  "data": "data/criteo.parquet",
+  "outcome": "visit",
+  "trial": {
+    "rows": 13979592,
+    "splits": {
+      "val": 1397982,
+      "test": 2796413,
+      "train": 9785197
+    },
+    "treated_share": 0.8500001287591226,
+    "outcome": "visit",
+    "rate_control": 0.03820095691954503,
+    "rate_treated": 0.048543360048743316,
+    "ate": 0.010342403129198284,
+    "ate_ci95": [
+      0.010055622885904043,
+      0.010629183372492525
+    ],
+    "relative_lift": 0.27073675539019615,
+    "max_abs_smd": 0.04883634026322702,
+    "smd": {
+      "f0": -0.006865618372250708,
+      "f1": 0.023994400678104405,
+      "f2": -0.006240994545303432,
+      "f3": -0.04883634026322702,
+      "f4": 0.007965661878506657,
+      "f5": -0.030556830660327137,
+      "f6": -0.04044806888649194,
+      "f7": 0.02126952997581169,
+      "f8": -0.02243333589170626,
+      "f9": 0.02400105773455939,
+      "f10": 0.01056346324053937,
+      "f11": -0.005159527974012351
+    }
+  },
+  "dowhy": {
+    "dowhy": "0.14",
+    "rows": 1000000,
+    "estimand": "{'estimand': Derivative(Expectation(visit|f3,f5,f2,f1,f4,f6,f0,f7,f9,f11,f10,f8), [treatment]), 'assumptions': {'Unconfoundedness': 'If U\u2192{treatment} and U\u2192visit then P(visit|treatment,f3,f5,f2,f1,f4,f6,f0,f7,f9,f11,f10,f8,U) = P(visit|treatment,f3,f5,f2,f1,f4,f6,f0,f7,f9,f11,f10,f8)'}}",
+    "ate": 0.0068471738416038055,
+    "refutations": {
+      "placebo_treatment": {
+        "new_effect": 3.871524837832686e-05,
+        "p_value": 0.46841471779993815
+      },
+      "random_common_cause": {
+        "new_effect": 0.006847134604370154,
+        "p_value": 0.4769214475897159
+      },
+      "data_subset": {
+        "new_effect": 0.006757397150320787,
+        "p_value": 0.4317606194714534
+      }
+    }
+  },
+  "test_rows": 2796413,
+  "tuning": {
+    "reused": "docs/best_params.json",
+    "best_params": {
+      "n_estimators": 150,
+      "learning_rate": 0.03159609838006633,
+      "num_leaves": 42,
+      "min_child_samples": 1659,
+      "colsample_bytree": 0.8943707739884128,
+      "reg_lambda": 0.008613067139922588
+    }
+  },
+  "models": {
+    "random": {
+      "fit_rows": 1999924,
+      "fit_s": 0,
+      "test_score_s": 0.1,
+      "val_auuc": -7.372966455815929e-05,
+      "test_auuc": -0.0001347125737579928,
+      "test_qini": -0.0001337238746983843,
+      "uplift_at_10": 0.011131318104648395,
+      "uplift_at_30": 0.009731133430813173,
+      "test_auuc_ci95": [
+        -0.00031398586092291225,
+        5.7921491434940136e-05
+      ],
+      "policy": {
+        "propensity": 0.850051119058594,
+        "rate_nobody": 0.03795916712574436,
+        "rate_everyone": 0.048421728379273186,
+        "budgets": [
+          {
+            "budget": 0.1,
+            "incremental_per_user": 0.0011213080075921575,
+            "random_incremental_per_user": 0.0011625491579170463,
+            "captured": 0.10717337566018659,
+            "net_value_per_user": 0.0009213080075921575,
+            "net_value_random_per_user": 0.0009625491579170463
+          },
+          {
+            "budget": 0.2,
+            "incremental_per_user": 0.002048882839236363,
+            "random_incremental_per_user": 0.002099399065509676,
+            "captured": 0.19582994924357677,
+            "net_value_per_user": 0.0016488828392363629,
+            "net_value_random_per_user": 0.001699399065509676
+          },
+          {
+            "budget": 0.3,
+            "incremental_per_user": 0.002954312283863031,
+            "random_incremental_per_user": 0.003092034556514925,
+            "captured": 0.28236989129851897,
+            "net_value_per_user": 0.002354312283863031,
+            "net_value_random_per_user": 0.002492034556514925
+          },
+          {
+            "budget": 0.5,
+            "incremental_per_user": 0.005064802686775033,
+            "random_incremental_per_user": 0.0051761641503039885,
+            "captured": 0.48408822314581623,
+            "net_value_per_user": 0.004064802686775033,
+            "net_value_random_per_user": 0.0041761641503039884
+          }
+        ]
+      }
+    },
+    "s_learner": {
+      "fit_rows": 1999924,
+      "fit_s": 4.9,
+      "test_score_s": 3.9,
+      "val_auuc": 0.0034301011056549753,
+      "test_auuc": 0.0037591753344810752,
+      "test_qini": 0.003797646677562155,
+      "uplift_at_10": 0.061539839085652887,
+      "uplift_at_30": 0.029489623314414362,
+      "test_auuc_ci95": [
+        0.0034684529601547425,
+        0.004004955426074946
+      ],
+      "policy": {
+        "propensity": 0.850051119058594,
+        "rate_nobody": 0.03795916712574436,
+        "rate_everyone": 0.048421728379273186,
+        "budgets": [
+          {
+            "budget": 0.1,
+            "incremental_per_user": 0.009368742577706722,
+            "random_incremental_per_user": 0.0011625491579170463,
+            "captured": 0.8954540241804387,
+            "net_value_per_user": 0.009168742577706722,
+            "net_value_random_per_user": 0.0009625491579170463
+          },
+          {
+            "budget": 0.2,
+            "incremental_per_user": 0.01001613349571169,
+            "random_incremental_per_user": 0.002099399065509676,
+            "captured": 0.9573309300658515,
+            "net_value_per_user": 0.009616133495711691,
+            "net_value_random_per_user": 0.001699399065509676
+          },
+          {
+            "budget": 0.3,
+            "incremental_per_user": 0.010333064268223072,
+            "random_incremental_per_user": 0.003092034556514925,
+            "captured": 0.9876228217768306,
+            "net_value_per_user": 0.009733064268223072,
+            "net_value_random_per_user": 0.002492034556514925
+          },
+          {
+            "budget": 0.5,
+            "incremental_per_user": 0.010405924747705346,
+            "random_incremental_per_user": 0.0051761641503039885,
+            "captured": 0.9945867455921105,
+            "net_value_per_user": 0.009405924747705345,
+            "net_value_random_per_user": 0.0041761641503039884
+          }
+        ]
+      }
+    },
+    "t_learner": {
+      "fit_rows": 1999924,
+      "fit_s": 5.4,
+      "test_score_s": 4.2,
+      "val_auuc": 0.0034830968725175562,
+      "test_auuc": 0.0035473680352287804,
+      "test_qini": 0.0035842449063955063,
+      "uplift_at_10": 0.05961968680617924,
+      "uplift_at_30": 0.029450794137970207,
+      "test_auuc_ci95": [
+        0.003244911631876115,
+        0.003817760348354281
+      ],
+      "policy": {
+        "propensity": 0.850051119058594,
+        "rate_nobody": 0.03795916712574436,
+        "rate_everyone": 0.048421728379273186,
+        "budgets": [
+          {
+            "budget": 0.1,
+            "incremental_per_user": 0.00888263656127266,
+            "random_incremental_per_user": 0.0011625491579170463,
+            "captured": 0.8489925502970617,
+            "net_value_per_user": 0.008682636561272659,
+            "net_value_random_per_user": 0.0009625491579170463
+          },
+          {
+            "budget": 0.2,
+            "incremental_per_user": 0.009642730667082225,
+            "random_incremental_per_user": 0.002099399065509676,
+            "captured": 0.921641501867424,
+            "net_value_per_user": 0.009242730667082226,
+            "net_value_random_per_user": 0.001699399065509676
+          },
+          {
+            "budget": 0.3,
+            "incremental_per_user": 0.00989501827563418,
+            "random_incremental_per_user": 0.003092034556514925,
+            "captured": 0.9457548716665125,
+            "net_value_per_user": 0.00929501827563418,
+            "net_value_random_per_user": 0.002492034556514925
+          },
+          {
+            "budget": 0.5,
+            "incremental_per_user": 0.01001306379697206,
+            "random_incremental_per_user": 0.0051761641503039885,
+            "captured": 0.9570375316650923,
+            "net_value_per_user": 0.00901306379697206,
+            "net_value_random_per_user": 0.0041761641503039884
+          }
+        ]
+      },
+      "auuc_vs_s_learner": -0.056344086243993514,
+      "auuc_diff_vs_s_learner_ci95": [
+        -0.00044710237713233356,
+        2.1540847999973034e-05
+      ]
+    },
+    "x_learner": {
+      "fit_rows": 1999924,
+      "fit_s": 11.1,
+      "test_score_s": 5.8,
+      "val_auuc": 0.0032530069438535753,
+      "test_auuc": 0.00356829605169062,
+      "test_qini": 0.003607437884529416,
+      "uplift_at_10": 0.062078917313897475,
+      "uplift_at_30": 0.029474664542560938,
+      "test_auuc_ci95": [
+        0.003307325649884674,
+        0.003798663766129232
+      ],
+      "policy": {
+        "propensity": 0.850051119058594,
+        "rate_nobody": 0.03795916712574436,
+        "rate_everyone": 0.048421728379273186,
+        "budgets": [
+          {
+            "budget": 0.1,
+            "incremental_per_user": 0.009113951913955455,
+            "random_incremental_per_user": 0.0011625491579170463,
+            "captured": 0.8711014151416787,
+            "net_value_per_user": 0.008913951913955455,
+            "net_value_random_per_user": 0.0009625491579170463
+          },
+          {
+            "budget": 0.2,
+            "incremental_per_user": 0.009758756599322696,
+            "random_incremental_per_user": 0.002099399065509676,
+            "captured": 0.9327311317801127,
+            "net_value_per_user": 0.009358756599322697,
+            "net_value_random_per_user": 0.001699399065509676
+          },
+          {
+            "budget": 0.3,
+            "incremental_per_user": 0.00989788974725253,
+            "random_incremental_per_user": 0.003092034556514925,
+            "captured": 0.9460293237388846,
+            "net_value_per_user": 0.00929788974725253,
+            "net_value_random_per_user": 0.002492034556514925
+          },
+          {
+            "budget": 0.5,
+            "incremental_per_user": 0.00997777370001942,
+            "random_incremental_per_user": 0.0051761641503039885,
+            "captured": 0.9536645433405806,
+            "net_value_per_user": 0.008977773700019419,
+            "net_value_random_per_user": 0.0041761641503039884
+          }
+        ]
+      },
+      "auuc_vs_s_learner": -0.0507769033914468,
+      "auuc_diff_vs_s_learner_ci95": [
+        -0.0004028227549858713,
+        5.7547613786525426e-05
+      ]
+    },
+    "dr_learner": {
+      "fit_rows": 1999924,
+      "fit_s": 25.3,
+      "test_score_s": 2.7,
+      "val_auuc": 0.0030179860099863597,
+      "test_auuc": 0.0037029413245240517,
+      "test_qini": 0.0037388953283036958,
+      "uplift_at_10": 0.06176029477596651,
+      "uplift_at_30": 0.0296561334824625,
+      "test_auuc_ci95": [
+        0.0034242373931374736,
+        0.003959001721663898
+      ],
+      "policy": {
+        "propensity": 0.850051119058594,
+        "rate_nobody": 0.03795916712574436,
+        "rate_everyone": 0.048421728379273186,
+        "budgets": [
+          {
+            "budget": 0.1,
+            "incremental_per_user": 0.0090408482657717,
+            "random_incremental_per_user": 0.0011625491579170463,
+            "captured": 0.8641142495316233,
+            "net_value_per_user": 0.0088408482657717,
+            "net_value_random_per_user": 0.0009625491579170463
+          },
+          {
+            "budget": 0.2,
+            "incremental_per_user": 0.009728480263552004,
+            "random_incremental_per_user": 0.002099399065509676,
+            "captured": 0.9298373531883286,
+            "net_value_per_user": 0.009328480263552005,
+            "net_value_random_per_user": 0.001699399065509676
+          },
+          {
+            "budget": 0.3,
+            "incremental_per_user": 0.009947185359565396,
+            "random_incremental_per_user": 0.003092034556514925,
+            "captured": 0.9507409436872254,
+            "net_value_per_user": 0.009347185359565396,
+            "net_value_random_per_user": 0.002492034556514925
+          },
+          {
+            "budget": 0.5,
+            "incremental_per_user": 0.010227331340327876,
+            "random_incremental_per_user": 0.0051761641503039885,
+            "captured": 0.977516985802916,
+            "net_value_per_user": 0.009227331340327875,
+            "net_value_random_per_user": 0.0041761641503039884
+          }
+        ]
+      },
+      "auuc_vs_s_learner": -0.014959134638178884,
+      "auuc_diff_vs_s_learner_ci95": [
+        -0.00030809819869746547,
+        0.00015927227448747847
+      ]
+    },
+    "causal_forest": {
+      "fit_rows": 1000000,
+      "fit_s": 127.7,
+      "test_score_s": 21.1,
+      "val_auuc": 0.0033497110612716067,
+      "test_auuc": 0.0036137342344148508,
+      "test_qini": 0.0036417085750672005,
+      "uplift_at_10": 0.050276559434347834,
+      "uplift_at_30": 0.029457070599937157,
+      "test_auuc_ci95": [
+        0.003356109460108665,
+        0.0038502478077945225
+      ],
+      "policy": {
+        "propensity": 0.850051119058594,
+        "rate_nobody": 0.03795916712574436,
+        "rate_everyone": 0.048421728379273186,
+        "budgets": [
+          {
+            "budget": 0.1,
+            "incremental_per_user": 0.00809566629896457,
+            "random_incremental_per_user": 0.0011625491579170463,
+            "captured": 0.7737748054984198,
+            "net_value_per_user": 0.00789566629896457,
+            "net_value_random_per_user": 0.0009625491579170463
+          },
+          {
+            "budget": 0.2,
+            "incremental_per_user": 0.009751298732899288,
+            "random_incremental_per_user": 0.002099399065509676,
+            "captured": 0.9320183171793005,
+            "net_value_per_user": 0.009351298732899289,
+            "net_value_random_per_user": 0.001699399065509676
+          },
+          {
+            "budget": 0.3,
+            "incremental_per_user": 0.010063439788981568,
+            "random_incremental_per_user": 0.003092034556514925,
+            "captured": 0.9618524131065287,
+            "net_value_per_user": 0.009463439788981568,
+            "net_value_random_per_user": 0.002492034556514925
+          },
+          {
+            "budget": 0.5,
+            "incremental_per_user": 0.010346633800293457,
+            "random_incremental_per_user": 0.0051761641503039885,
+            "captured": 0.9889197826013905,
+            "net_value_per_user": 0.009346633800293457,
+            "net_value_random_per_user": 0.0041761641503039884
+          }
+        ]
+      },
+      "auuc_vs_s_learner": -0.03868962927378365,
+      "auuc_diff_vs_s_learner_ci95": [
+        -0.0002658781489255776,
+        -1.635497744047038e-05
+      ]
+    }
+  },
+  "best_model": "t_learner",
+  "scored_rows": 13979592,
+  "timings": {
+    "summary_s": 0.5,
+    "dowhy_s": 164.2,
+    "sampling_s": 0.5,
+    "score_all_s": 21.4
+  }
+}
