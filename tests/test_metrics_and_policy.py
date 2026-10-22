@@ -75,3 +75,18 @@ def test_the_paired_bootstrap_interval_excludes_zero_for_a_real_gap(trial):
     noisy = tau + np.random.default_rng(1).normal(scale=0.2, size=len(tau))
     low, high = bootstrap(auuc, tau, t, y, n=30, baseline=noisy)
     assert low > 0 and high > low
+
+
+def test_tied_scores_do_not_depend_on_the_order_of_the_rows(trial):
+    """A constant score must look like random targeting however rows are sorted.
+
+    With a stable sort, a block of tied users is ranked in file order, so a
+    file sorted by outcome would hand a constant score a perfect curve.
+    """
+    t, y, _ = trial
+    order = np.argsort(-y, kind="stable")  # every visitor first
+    t_sorted, y_sorted = t[order], y[order]
+    constant = np.zeros(len(t))
+    assert abs(auuc(constant, t_sorted, y_sorted)) < 0.004
+    low, high = bootstrap(auuc, constant, t_sorted, y_sorted, n=20)
+    assert low < 0.004 and high > -0.004

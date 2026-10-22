@@ -13,6 +13,8 @@ of a policy is what it earns over treating nobody.
 """
 import numpy as np
 
+from .metrics import ranking
+
 
 def policy_value(treat, t, y, propensity):
     """IPW estimate of the mean outcome if `treat` (0/1 per user) were applied."""
@@ -26,7 +28,7 @@ def top_share(score, budget):
     k = int(round(budget * len(score)))
     treat = np.zeros(len(score), dtype=np.int8)
     if k:
-        treat[np.argsort(-score, kind="stable")[:k]] = 1
+        treat[ranking(score)[:k]] = 1
     return treat
 
 

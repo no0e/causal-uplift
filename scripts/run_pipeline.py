@@ -59,6 +59,8 @@ def parse():
                         help="The causal forest is fitted on this many rows.")
     parser.add_argument("--models", nargs="+", default=list(MODELS))
     parser.add_argument("--trials", type=int, default=30)
+    parser.add_argument("--params", default=None,
+                        help="A best_params.json to reuse instead of tuning.")
     parser.add_argument("--bootstrap", type=int, default=200)
     parser.add_argument("--budgets", type=float, nargs="+",
                         default=[0.1, 0.2, 0.3, 0.5])
@@ -112,9 +114,10 @@ def dowhy_section(args, con):
     from causal_uplift.identification import identify_and_refute
 
     frame = con.sql(f"""
-        SELECT {", ".join(FEATURES + [TREATMENT, args.outcome])}
-        FROM '{args.data}' WHERE split = 'train'
-        USING SAMPLE reservoir({args.dowhy_rows} ROWS) REPEATABLE (7)
+        SELECT * FROM (
+            SELECT {", ".join(FEATURES + [TREATMENT, args.outcome])}
+            FROM '{args.data}' WHERE split = 'train'
+        ) USING SAMPLE reservoir({args.dowhy_rows} ROWS) REPEATABLE (7)
     """).pl()
     section = identify_and_refute(frame, args.outcome)
     print(f"DoWhy ATE {section['ate']:+.5f}, refutations "
@@ -168,7 +171,11 @@ def main():
 
         # -------------------------------------------------------- tuning
         params = None
-        if args.trials:
+        if args.params:
+            params = json.loads(Path(args.params).read_text())
+            results["tuning"] = {"reused": args.params, "best_params": params}
+            print(f"Reusing {params}")
+        elif args.trials:
             from causal_uplift.tuning import tune
 
             started = time.time()

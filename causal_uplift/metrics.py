@@ -12,12 +12,25 @@ of users, so 0 is random targeting and higher is better, and two models are
 compared on the same scale whatever the test size. The Qini curve and its
 coefficient are reported too, because that is what most of the literature
 quotes.
+
+Ties are broken at random, with a fixed seed. A learner can give large groups
+of users exactly the same score (an S-learner whose trees never split on the
+treatment gives them all zero), and a stable sort would then order each group
+as it sits in the file. Any trend in the file order would leak into the curve,
+and a bootstrap resample, which reorders the rows, would see a different
+curve from the same model.
 """
 import numpy as np
 
 
+def ranking(score, seed=0):
+    """Indices from highest to lowest score, ties in a seeded random order."""
+    noise = np.random.default_rng(seed).random(len(score))
+    return np.lexsort((noise, -np.asarray(score, dtype=np.float64)))
+
+
 def _cumulative(score, t, y):
-    order = np.argsort(-score, kind="stable")
+    order = ranking(score)
     t, y = t[order].astype(np.float64), y[order].astype(np.float64)
     n_t, n_c = np.cumsum(t), np.cumsum(1 - t)
     y_t, y_c = np.cumsum(y * t), np.cumsum(y * (1 - t))
@@ -67,7 +80,7 @@ def qini_coefficient(score, t, y, points=100):
 def uplift_at(score, t, y, fraction):
     """Treated rate minus control rate in the top `fraction` of the ranking."""
     k = max(1, int(round(fraction * len(score))))
-    top = np.argsort(-score, kind="stable")[:k]
+    top = ranking(score)[:k]
     tt, yy = t[top], y[top]
     if tt.sum() == 0 or (1 - tt).sum() == 0:
         return float("nan")
