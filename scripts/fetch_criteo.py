@@ -3,7 +3,9 @@
     python scripts/fetch_criteo.py                 # data/criteo.parquet
     python scripts/fetch_criteo.py --synthetic 200000
 
-13,979,592 rows, about 300 MB gzipped. Criteo AI Lab, Diemert et al., "A
+13,979,592 rows, about 300 MB gzipped, from the Hugging Face Hub copy Criteo
+publishes (criteo/criteo-uplift); the original go.criteo.net link is the
+fallback. Criteo AI Lab, Diemert et al., "A
 Large Scale Benchmark for Uplift Modeling", AdKDD 2018; distributed under
 CC BY-NC-SA 4.0, so it is downloaded here and never committed.
 
@@ -24,11 +26,25 @@ sys.path.insert(0, str(ROOT))
 from causal_uplift.data import URL, connect, prepare, summary  # noqa: E402
 from causal_uplift.synthetic import write_csv  # noqa: E402
 
+HF_REPO, HF_FILE = "criteo/criteo-uplift", "criteo-research-uplift-v2.1.csv.gz"
+
 
 def download(url, target):
     if target.exists():
         print(f"Using {target}")
         return target
+    try:
+        from huggingface_hub import hf_hub_download
+
+        print(f"Downloading {HF_FILE} from the Hugging Face Hub ({HF_REPO})")
+        path = Path(hf_hub_download(HF_REPO, HF_FILE, repo_type="dataset",
+                                    local_dir=target.parent))
+        if path != target:
+            path.rename(target)
+        print(f"  {target.stat().st_size / 1e6:.0f} MB")
+        return target
+    except Exception as error:  # Hub unreachable: try the original link
+        print(f"  Hub download failed ({type(error).__name__}); trying {url}")
     print(f"Downloading {url}")
     partial = target.with_suffix(".part")
     with urllib.request.urlopen(url, timeout=600) as response, \

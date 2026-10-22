@@ -20,6 +20,7 @@ import polars as pl
 
 from . import FEATURES, OUTCOMES, TREATMENT
 
+# The original link, now a fallback: see scripts/fetch_criteo.py.
 URL = "http://go.criteo.net/criteo-research-uplift-v2.1.csv.gz"
 SPLITS = {"train": (0, 70), "val": (70, 80), "test": (80, 100)}
 
